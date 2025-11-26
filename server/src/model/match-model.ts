@@ -1,14 +1,22 @@
-interface matchInterface {
-  matchId: string; 
+export interface matchInterface {
+  matchId: string;
   teamA: string;
   teamB: string;
-  scoreA: number | string;
-  scoreB: number | string;
-  status: "not started" | "live" | "ended";
+  scoreA: number;
+  scoreB: number;
+  status: "not-started" | "live" | "ended" | "half-time";
   events: Array<{
-    type: "goal" | "yellow card" | "red card" | "substitution";
-    team: "Team 1" | "Team 2";
-    player: string;
+    type:
+      | "goal"
+      | "yellow-card"
+      | "red-card"
+      | "substitution"
+      | "match-end"
+      | "half-time";
+    team: "teamA" | "teamB";
+    player?: string;
+    playerIn?: string;
+    playerOut?: string;
     minute: number | string;
   }>;
 }
@@ -16,4 +24,3 @@ interface matchInterface {
 let db: matchInterface[] = [];
 
 export default db;
-
