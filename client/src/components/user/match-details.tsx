@@ -7,9 +7,9 @@ interface MatchDetailsProps {
 
 export default function MatchDetails({ match }: MatchDetailsProps) {
   return (
-    <div className="space-y-">
+    <div className="">
       {/* Score Card */}
-      <div className="bg-card border border-border rounded-lg p-8">
+      <div className="bg-card border border-border rounded-lg -mt-4">
         <div className="grid grid-cols-3 gap-8 items-center">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">Team A</p>

@@ -2,12 +2,11 @@ import type { Match } from "./admin-dashboard"
 
 interface MatchListProps {
   matches: Match[]
-  selectedMatchId: string | null
   onSelectMatch: (id: string) => void
   onStartMatch: (id: string) => void
 }
 
-export default function MatchList({ matches, selectedMatchId, onSelectMatch, onStartMatch }: MatchListProps) {
+export default function MatchList({ matches, onSelectMatch, onStartMatch }: MatchListProps) {
   const getStatusBadge = (status: string) => {
     const styles = {
       scheduled: "bg-muted text-muted-foreground",
@@ -24,10 +23,7 @@ export default function MatchList({ matches, selectedMatchId, onSelectMatch, onS
         <div
           key={match.matchId}
           onClick={() => onSelectMatch(match.matchId)}
-          className={`p-4 rounded-lg border cursor-pointer transition-all ${
-            selectedMatchId === match.matchId
-              ? "bg-primary/5 border-primary"
-              : "bg-card border-border hover:border-primary/50"
+          className={`p-4 rounded-lg border cursor-pointer transition-all bg-card border-border hover:border-primary/50"
           }`}
         >
           <div className="flex justify-between items-start mb-3">
@@ -56,7 +52,7 @@ export default function MatchList({ matches, selectedMatchId, onSelectMatch, onS
             </div>
           </div>
 
-          {match.status === "not-started" && (
+          {(match.status === "not-started" || match.status === "half-time")  && (
             <button
               onClick={(e) => {
                 e.stopPropagation()

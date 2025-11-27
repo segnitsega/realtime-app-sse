@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import MatchList from "./match-list";
 import MatchForm from "./match-form";
 import EventManager from "./event-manager";
@@ -35,6 +35,7 @@ export interface MatchEvent {
 export default function AdminDashboard() {
   const url = import.meta.env.VITE_API;
   const liveMatchLoadingState = "live-matches";
+  const matchLoadingState = "matches";
   const [matches, setMatches] = useState<Match[]>([]);
   const [showMatchForm, setShowMatchForm] = useState(false);
   const queryClient = useQueryClient();
@@ -201,7 +202,6 @@ export default function AdminDashboard() {
           {data && data.length > 0 && (
             <MatchList
               matches={data}
-              selectedMatchId={`${data[0].matchId}`}
               onSelectMatch={(id: string) => {}}
               onStartMatch={startMatch}
             />
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Right Panel - Event Manager */}
-          <EventManager LiveMatches={liveMatchLoadingState}/>
+          <EventManager LiveMatches={liveMatchLoadingState} matchLoadingState={matchLoadingState}/>
 
         {/* {liveMatchData && liveMatchData.length > 0 && (
           <div>

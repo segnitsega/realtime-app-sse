@@ -24,7 +24,7 @@ export default function EventForm({ match, onSubmit, onCancel }: EventFormProps)
 
   const details: Record<string, string> = { team };
 
-  if (eventType === "goal" || eventType === "yellow_card" || eventType === "red_card") {
+  if (eventType === "goal" || eventType === "yellow-card" || eventType === "red-card") {
     details.player = playerName;
   }
 
@@ -59,7 +59,7 @@ export default function EventForm({ match, onSubmit, onCancel }: EventFormProps)
           <option value="match-end">Full-time</option>
         </select>
       </div>
-
+    
       <div>
         <label className="block text-xs font-bold mb-1">Minute</label>
         <input
@@ -73,7 +73,7 @@ export default function EventForm({ match, onSubmit, onCancel }: EventFormProps)
         />
       </div>
 
-      {eventType !== "halftime" && eventType !== "fulltime" && (
+      {eventType !== "half-time" && eventType !== "match-end" && (
         <>
           <div>
             <label className="block text-xs font-bold mb-1">Team</label>
@@ -87,7 +87,7 @@ export default function EventForm({ match, onSubmit, onCancel }: EventFormProps)
             </select>
           </div>
 
-          {(eventType === "goal" || eventType === "yellow_card" || eventType === "red_card") && (
+          {(eventType === "goal" || eventType === "yellow-card" || eventType === "red-card") && (
             <div>
               <label className="block text-xs font-bold mb-1">Player Name</label>
               <input

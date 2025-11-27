@@ -1,18 +1,17 @@
 import { useState } from "react";
-import type { Match, MatchEvent } from "./admin-dashboard";
+import type { MatchEvent } from "./admin-dashboard";
 import EventForm from "./event-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface EventManagerProps {
   LiveMatches: string;
+  matchLoadingState: string;
 }
 
-export default function EventManager({ LiveMatches }: EventManagerProps) {
+export default function EventManager({ LiveMatches, matchLoadingState }: EventManagerProps) {
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null);
   const url = import.meta.env.VITE_API;
-
-  //fix the following useMutation to log events to the server
-
+  const queryClient = useQueryClient();
   const {
     data: logMutationData,
     isPending,
@@ -34,6 +33,7 @@ export default function EventManager({ LiveMatches }: EventManagerProps) {
       });
 
       if (!res.ok) throw new Error("Failed to log event");
+      queryClient.invalidateQueries({ queryKey: [matchLoadingState] });
 
       return res.json();
     },

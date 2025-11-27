@@ -20,7 +20,6 @@ export default function EventTimeline({ match }: EventTimelineProps) {
     };
     return icons[type as keyof typeof icons];
   };
-// || "📌";
   const getEventLabel = (type: string) => {
     const labels = {
       goal: "Goal",
