@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import db from "./model/match-model";
-import { matchInterface } from "./model/match-model";
 
 dotenv.config();
 const server = express();
@@ -108,7 +107,6 @@ server.post("/admin/logs/:matchId", (req: Request, res: Response) => {
     minute: event.minute,
   };
 
-  // --- UPDATE MATCH STATE ---
   if (event.type === "goal") {
     if (event.team === "teamA") match.scoreA++;
     if (event.team === "teamB") match.scoreB++;
@@ -118,7 +116,6 @@ server.post("/admin/logs/:matchId", (req: Request, res: Response) => {
     match.status = event.type;
   }
 
-  // --- SAVE EVENT INTO DB ---
   match.events.push(eventToSave);
 
     const broadcastEvent = {
@@ -131,59 +128,6 @@ server.post("/admin/logs/:matchId", (req: Request, res: Response) => {
   clients.forEach((client) => {
     client.write(`data: ${JSON.stringify(broadcastEvent)}\n\n`);
   });
-
-
-  // interface eventType {
-  //   matchId: string;
-  //   type: string;
-  //   team?: string;
-  //   player?: string;
-  //   playerIn?: string;
-  //   playerOut?: string;
-  //   teamATotalGoal?: number;
-  //   teamBTotalGoal?: number;
-  //   minute: number | string;
-  // }
-
-  // const broadcastEvent: eventType = {
-  //   matchId: matchId,
-  //   type: event.type || "",
-  //   team: event.team || "",
-  //   player: event.player || "",
-  //   playerIn: event.playerIn || "",
-  //   playerOut: event.playerOut || "",
-  //   minute: event.minute,
-  //   teamATotalGoal: match?.scoreA,
-  //   teamBTotalGoal: match?.scoreB,
-  // };
-
-  // if (!match) res.status(404).json({ message: "match not found" });
-  // else {
-  //   broadcastEvent.matchId = matchId;
-  //   if (event.type === "goal") {
-  //     broadcastEvent.type = "goal";
-  //     if (event.team === "teamA") {
-  //       broadcastEvent.teamATotalGoal = match.scoreA++;
-  //       broadcastEvent.team = "teamA";
-  //     } else {
-  //       broadcastEvent.teamBTotalGoal = match.scoreB++;
-  //       broadcastEvent.team = "teamB";
-  //     }
-  //     broadcastEvent.player = event.player;
-  //   } else if (event.type === "match-end" || event.type === "half-time") {
-  //     match.status = event.type;
-  //     broadcastEvent.type = match.status;
-  //   } else if (event.type === "substitution") {
-  //     broadcastEvent.type = "substitution";
-  //     broadcastEvent.playerIn = event.playerIn;
-  //     broadcastEvent.playerOut = event.playerOut;
-  //   }
-  //   broadcastEvent.minute = event.minute;
-  // }
-
-  // clients.forEach((client) => {
-  //   client.write(`data: ${JSON.stringify(broadcastEvent)}\n\n`);
-  // });
 
   res.json({
     message: "Event logged & broadcasted",
