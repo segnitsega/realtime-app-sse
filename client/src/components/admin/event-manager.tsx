@@ -69,8 +69,7 @@ export default function EventManager({ LiveMatches, matchLoadingState }: EventMa
   const { data, isLoading, isError } = useQuery({
     queryKey: [LiveMatches],
     queryFn: async () => {
-      const response = await fetch(`${url}/live-matches`);
-      console.log(`${url}/live-matches`);
+      const response = await fetch(`${url}/matches/live`);
       if (!response.ok) {
         if (response.status === 404) return [];
         throw new Error("Network error");
