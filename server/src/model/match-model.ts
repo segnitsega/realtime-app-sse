@@ -5,6 +5,7 @@ export interface matchInterface {
   scoreA: number;
   scoreB: number;
   status: "not-started" | "live" | "ended" | "half-time";
+  startTime: string;
   events: Array<{
     type:
       | "goal"

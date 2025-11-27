@@ -17,7 +17,7 @@ export default function MatchForm({ onSubmit, onCancel }: MatchFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (formData.teamA && formData.teamB) {
+    if (formData.teamA && formData.teamB && formData.startTime) {
       onSubmit(formData.teamA, formData.teamB, formData.startTime)
     }
   }

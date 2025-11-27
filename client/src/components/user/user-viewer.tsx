@@ -8,52 +8,6 @@ export default function UserViewer() {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const url = import.meta.env.VITE_API;
 
-  // Mock data - would be fetched from backend in real app
-  const [liveMatches] = useState<Match[]>([
-    {
-      id: "1",
-      teamA: "Manchester United",
-      teamB: "Liverpool",
-      startTime: "2025-11-26T15:00",
-      status: "live",
-      scoreA: 2,
-      scoreB: 1,
-      events: [
-        {
-          id: "1",
-          type: "goal",
-          team: "Manchester United",
-          minute: 12,
-          details: { playerName: "Harry Maguire" },
-        },
-        {
-          id: "2",
-          type: "goal",
-          team: "Liverpool",
-          minute: 28,
-          details: { playerName: "Mohamed Salah" },
-        },
-        {
-          id: "3",
-          type: "goal",
-          team: "Manchester United",
-          minute: 45,
-          details: { playerName: "Bruno Fernandes" },
-        },
-      ],
-    },
-    {
-      id: "2",
-      teamA: "Chelsea",
-      teamB: "Arsenal",
-      startTime: "2025-11-26T17:30",
-      status: "scheduled",
-      scoreA: 0,
-      scoreB: 0,
-      events: [],
-    },
-  ]);
-
   const { data, isLoading, isError } = useQuery<Match[]>({
     queryKey: ["matches"],
     queryFn: async () => {

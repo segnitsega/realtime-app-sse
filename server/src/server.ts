@@ -18,6 +18,18 @@ server.get("/matches", (req: Request, res: Response) => {
   res.json(db);
 });
 
+server.get("/matches/:id", (req: Request, res: Response) => {
+  const { id } = req.params;
+  const match = db.find((m) => m.matchId === id);
+
+  if (!match) {
+    return res.status(404).json({ message: "Match not found" });
+  }
+
+  res.json(match);
+});
+
+
 server.get("/live-matches", (req: Request, res: Response) => {
   const liveMatches = db.filter((match) => match.status === "live");
   if (!liveMatches || liveMatches.length === 0)
@@ -26,15 +38,16 @@ server.get("/live-matches", (req: Request, res: Response) => {
 });
 
 server.post("/admin/create-match", (req: Request, res: Response) => {
-  const { teamA, teamB } = req.body;
+  const { teamA, teamB, startTime } = req.body;
   if (!teamA || !teamB) {
     return res.status(400).send("Both team names are required");
   }
-  
+
   db.push({
     matchId: `match_${db.length + 1}`,
     teamA,
     teamB,
+    startTime,
     scoreA: 0,
     scoreB: 0,
     status: "not-started",
@@ -63,81 +76,119 @@ server.get("/events", (req: Request, res: Response) => {
 
   res.write("data: SSE connection established\n\n");
 
-  let count = 1;
-  const interval = setInterval(()=>{
-    res.write(`data: Message #${count}\n`)
-    count++;
-  }, 1000)
+  // let count = 1;
+  // const interval = setInterval(()=>{
+  //   res.write(`data: Message #${count}\n\n`)
+  //   count++;
+  // }, 1000)
 
   req.on("close", () => {
-    clearInterval(interval)
+    // clearInterval(interval)
     clients = clients.filter((c) => c !== res);
   });
 });
 
-server.post("/admin/logs/:id", (req: Request, res: Response) => {
+server.post("/admin/logs/:matchId", (req: Request, res: Response) => {
   const { matchId } = req.params;
   const { event } = req.body;
 
-  const match: matchInterface | undefined = db.find(
-    (match) => match.matchId === matchId
-  );
+  console.log("Event log received", event);
 
-  interface eventType {
-    matchId: string;
-    type: string;
-    team?: string;
-    player?: string;
-    playerIn?: string;
-    playerOut?: string;
-    teamATotalGoal?: number ;
-    teamBTotalGoal?: number ;
-    minute: number | string;
+  const match = db.find((match) => match.matchId === matchId);
+  if (!match) {
+    return res.status(404).json({ message: "Match not found" });
   }
 
-  const broadcastEvent: eventType = {
-    matchId: matchId,
-    type: event.type || "",
-    team: event.team || "",
-    player: event.player || "",
-    playerIn: event.playerIn || "",
-    playerOut: event.playerOut || "",
+  const eventToSave = {
+    type: event.type,
+    team: event.team,
+    player: event.player,
+    playerIn: event.playerIn,
+    playerOut: event.playerOut,
     minute: event.minute,
-    teamATotalGoal: match?.scoreA,
-    teamBTotalGoal: match?.scoreB,
   };
 
-  if (!match) res.status(404).json({ message: "match not found" });
-  else {
-    broadcastEvent.matchId = matchId;
-    if (event.type === "goal") {
-      broadcastEvent.type = "goal";
-      if (event.team === "teamA") {
-        broadcastEvent.teamATotalGoal = match.scoreA++;
-        broadcastEvent.team = "teamA";
-      } else {
-        broadcastEvent.teamBTotalGoal = match.scoreB++;
-        broadcastEvent.team = "teamB";
-      }
-      broadcastEvent.player = event.player;
-    } else if (event.type === "match-end" || event.type === "half-time") {
-      match.status = event.type;
-      broadcastEvent.type = match.status;
-    } else if (event.type === "substitution") {
-      broadcastEvent.type = "substitution";
-      broadcastEvent.playerIn = event.playerIn;
-      broadcastEvent.playerOut = event.playerOut;
-    }
-    broadcastEvent.minute = event.minute;
+  // --- UPDATE MATCH STATE ---
+  if (event.type === "goal") {
+    if (event.team === "teamA") match.scoreA++;
+    if (event.team === "teamB") match.scoreB++;
   }
 
+  if (event.type === "half-time" || event.type === "match-end") {
+    match.status = event.type;
+  }
+
+  // --- SAVE EVENT INTO DB ---
+  match.events.push(eventToSave);
+
+    const broadcastEvent = {
+    matchId,
+    ...eventToSave,
+    teamATotalGoal: match.scoreA,
+    teamBTotalGoal: match.scoreB,
+  };
+
   clients.forEach((client) => {
-    client.write(`data: ${JSON.stringify(broadcastEvent)}`);
+    client.write(`data: ${JSON.stringify(broadcastEvent)}\n\n`);
   });
 
+
+  // interface eventType {
+  //   matchId: string;
+  //   type: string;
+  //   team?: string;
+  //   player?: string;
+  //   playerIn?: string;
+  //   playerOut?: string;
+  //   teamATotalGoal?: number;
+  //   teamBTotalGoal?: number;
+  //   minute: number | string;
+  // }
+
+  // const broadcastEvent: eventType = {
+  //   matchId: matchId,
+  //   type: event.type || "",
+  //   team: event.team || "",
+  //   player: event.player || "",
+  //   playerIn: event.playerIn || "",
+  //   playerOut: event.playerOut || "",
+  //   minute: event.minute,
+  //   teamATotalGoal: match?.scoreA,
+  //   teamBTotalGoal: match?.scoreB,
+  // };
+
+  // if (!match) res.status(404).json({ message: "match not found" });
+  // else {
+  //   broadcastEvent.matchId = matchId;
+  //   if (event.type === "goal") {
+  //     broadcastEvent.type = "goal";
+  //     if (event.team === "teamA") {
+  //       broadcastEvent.teamATotalGoal = match.scoreA++;
+  //       broadcastEvent.team = "teamA";
+  //     } else {
+  //       broadcastEvent.teamBTotalGoal = match.scoreB++;
+  //       broadcastEvent.team = "teamB";
+  //     }
+  //     broadcastEvent.player = event.player;
+  //   } else if (event.type === "match-end" || event.type === "half-time") {
+  //     match.status = event.type;
+  //     broadcastEvent.type = match.status;
+  //   } else if (event.type === "substitution") {
+  //     broadcastEvent.type = "substitution";
+  //     broadcastEvent.playerIn = event.playerIn;
+  //     broadcastEvent.playerOut = event.playerOut;
+  //   }
+  //   broadcastEvent.minute = event.minute;
+  // }
+
+  // clients.forEach((client) => {
+  //   client.write(`data: ${JSON.stringify(broadcastEvent)}\n\n`);
+  // });
+
   res.json({
-    message: "log updated successfully",
-    db,
+    message: "Event logged & broadcasted",
+    event: broadcastEvent,
+    match,
   });
 });
 

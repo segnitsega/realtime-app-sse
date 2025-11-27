@@ -7,7 +7,7 @@ interface MatchDetailsProps {
 
 export default function MatchDetails({ match }: MatchDetailsProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-">
       {/* Score Card */}
       <div className="bg-card border border-border rounded-lg p-8">
         <div className="grid grid-cols-3 gap-8 items-center">

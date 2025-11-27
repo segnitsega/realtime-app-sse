@@ -1,77 +1,126 @@
-import type { Match } from "../admin/admin-dashboard"
+import { useEffect, useState } from "react";
+import type { Match, MatchEvent } from "../admin/admin-dashboard";
+import { useQuery } from "@tanstack/react-query";
 
 interface EventTimelineProps {
-  match: Match
+  match: Match;
 }
 
 export default function EventTimeline({ match }: EventTimelineProps) {
+  const url = import.meta.env.VITE_API;
+
   const getEventIcon = (type: string) => {
     const icons = {
       goal: "⚽",
       substitution: "🔄",
-      yellow_card: "🟨",
-      red_card: "🟥",
-      halftime: "⏸️",
-      fulltime: "🏁",
-    }
-    return icons[type as keyof typeof icons] || "📌"
-  }
-
+      " yellow-card": "🟨",
+      " red-card": "🟥",
+      " half-time": "⏸️",
+      " full-time": "🏁",
+    };
+    return icons[type as keyof typeof icons];
+  };
+// || "📌";
   const getEventLabel = (type: string) => {
     const labels = {
       goal: "Goal",
       substitution: "Substitution",
-      yellow_card: "Yellow Card",
-      red_card: "Red Card",
-      halftime: "Half-time",
-      fulltime: "Full-time",
+      " yellow-card": "Yellow Card",
+      "red-card": "Red Card",
+      "half-time": "Half-time",
+      "full-time": "Full-time",
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
+
+  const [events, setEvents] = useState<MatchEvent[]>([]);
+  const { data: matchData, isLoading } = useQuery({
+    queryKey: ["match-events", match.matchId],
+    queryFn: async () => {
+      const res = await fetch(`${url}/matches/${match.matchId}`);
+      if (!res.ok) throw new Error("Failed to fetch match events");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (matchData?.events) {
+      const formattedEvents = matchData.events.map((ev, i) => ({
+        id: i + 1,
+        ...ev,
+        time: "", // no timestamp for stored events
+      }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEvents(formattedEvents);
     }
-    return labels[type as keyof typeof labels] || type
-  }
+  }, [matchData]);
+  
+  useEffect(() => {
+    const es = new EventSource(`${url}/events`);
+
+    es.onmessage = (event) => {
+      try {
+        const parsed: MatchEvent = JSON.parse(event.data);
+        setEvents((prev) => [...prev, parsed]);
+      } catch (err) {
+        console.error("Invalid SSE event:", err);
+      }
+    };
+
+    es.onerror = () => {
+      console.log("SSE closed");
+      es.close();
+    };
+
+    return () => es.close();
+  }, []);
 
   return (
-    <div className="bg-card border border-border rounded-lg p-8">
-      <h3 className="text-2xl font-bold mb-8">Live Timeline</h3>
-
-      {match.events.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">No events yet. Stay tuned!</p>
-      ) : (
-        <div className="space-y-6">
-          {[...match.events].reverse().map((event, index) => (
-            <div key={event.id} className="flex gap-6">
-              {/* Timeline connector */}
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-lg">
-                  {getEventIcon(event.type)}
-                </div>
-                {index < match.events.length - 1 && <div className="w-1 h-12 bg-border mt-4"></div>}
-              </div>
-
-              {/* Event details */}
-              <div className="flex-1 pt-2">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="font-bold text-lg text-foreground">{getEventLabel(event.type)}</p>
-                    <p className="text-sm text-muted-foreground">{event.team}</p>
-                  </div>
-                  <p className="font-bold text-primary text-lg">{event.minute}'</p>
-                </div>
-
-                {event.details.playerName && (
-                  <p className="text-sm text-foreground bg-secondary/30 px-3 py-2 rounded inline-block">
-                    {event.details.playerName}
-                  </p>
-                )}
-                {event.details.playerOut && (
-                  <p className="text-sm text-foreground bg-accent/20 px-3 py-2 rounded inline-block ml-2">
-                    {event.details.playerOut} (out)
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+    <div className="bg-card rounded-lg p-6 space-y-4">
+      {events.length === 0 && (
+        <p className="text-center text-muted-foreground py-12">
+          Waiting for live events...
+        </p>
       )}
+
+      {events.map((event, index) => {
+        const isTeamA = event.team === "teamA";
+
+        return (
+          <div
+            key={index}
+            className={`flex w-full ${
+              isTeamA ? "justify-start" : "justify-end"
+            }`}
+          >
+            <div
+              className={`max-w-[70%] rounded-xl px-4 py-3 shadow 
+              ${
+                isTeamA ? "bg-secondary text-left" : "bg-primary/20 text-right"
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{getEventIcon(event.type)}</span>
+                <span className="font-semibold">
+                  {getEventLabel(event.type)}
+                </span>
+              </div>
+
+              {/* Details */}
+              <p className="text-sm text-muted-foreground mt-1">
+                {event.player ||
+                  `${event.playerOut || ""} → ${event.playerIn || ""}`}
+              </p>
+
+              {/* Minute */}
+              <p className="text-xs text-foreground mt-1 font-medium">
+                {event.minute}'
+              </p>
+            </div>
+          </div>
+        );
+      })}
     </div>
-  )
+  );
 }

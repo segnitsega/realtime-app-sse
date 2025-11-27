@@ -17,7 +17,7 @@ export interface Match {
 }
 
 export interface MatchEvent {
-  id: string;
+  matchId: string;
   type:
     | "goal"
     | "substitution"
@@ -25,7 +25,7 @@ export interface MatchEvent {
     | "red-card"
     | "half-time"
     | "match-end";
-  team: "teamA" | "teamB";
+  team?: "teamA" | "teamB";
   player?: string;
   playerIn?: string;
   playerOut?: string;
@@ -34,6 +34,7 @@ export interface MatchEvent {
 
 export default function AdminDashboard() {
   const url = import.meta.env.VITE_API;
+  const liveMatchLoadingState = "live-matches";
   const [matches, setMatches] = useState<Match[]>([]);
   const [showMatchForm, setShowMatchForm] = useState(false);
   const queryClient = useQueryClient();
@@ -62,13 +63,13 @@ export default function AdminDashboard() {
 
 
   const createMatchMutation = useMutation({
-    mutationFn: async ({ teamA, teamB }: { teamA: string; teamB: string }) => {
+    mutationFn: async ({ teamA, teamB, startTime }: { teamA: string; teamB: string, startTime: string }) => {
       const res = await fetch(`${url}/admin/create-match`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ teamA, teamB }),
+        body: JSON.stringify({ teamA, teamB, startTime }),
       });
 
       if (!res.ok) {
@@ -103,6 +104,7 @@ export default function AdminDashboard() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: [liveMatchLoadingState] });
     },
 
     onError: (error) => {
@@ -122,7 +124,7 @@ export default function AdminDashboard() {
     //   events: [],
     // };
     // setMatches([...matches, newMatch]);
-    createMatchMutation.mutate({ teamA, teamB });
+    createMatchMutation.mutate({ teamA, teamB, startTime });
   };
 
   const startMatch = (matchId: string) => {
@@ -207,7 +209,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Right Panel - Event Manager */}
-          <EventManager />
+          <EventManager LiveMatches={liveMatchLoadingState}/>
 
         {/* {liveMatchData && liveMatchData.length > 0 && (
           <div>

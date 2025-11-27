@@ -13,26 +13,34 @@ interface EventFormProps {
 export default function EventForm({ match, onSubmit, onCancel }: EventFormProps) {
   const [eventType, setEventType] = useState("goal")
   const [minute, setMinute] = useState("")
-  const [team, setTeam] = useState(match.teamA)
+  const [team, setTeam] = useState("teamA")
   const [playerName, setPlayerName] = useState("")
   const [playerOut, setPlayerOut] = useState("")
-  const [cardType, setCardType] = useState("yellow")
+  // const [cardType, setCardType] = useState("yellow")
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!minute) return
+  e.preventDefault();
+  if (!minute) return;
 
-    const details: Record<string, string> = { team, playerName }
-    if (playerOut) details.playerOut = playerOut
-    if (cardType) details.cardType = cardType
+  const details: Record<string, string> = { team };
 
-    onSubmit(eventType, Number.parseInt(minute), details)
-
-    setEventType("goal")
-    setMinute("")
-    setPlayerName("")
-    setPlayerOut("")
+  if (eventType === "goal" || eventType === "yellow_card" || eventType === "red_card") {
+    details.player = playerName;
   }
+
+  if (eventType === "substitution") {
+    details.playerIn = playerName;
+    details.playerOut = playerOut;
+  }
+
+  onSubmit(eventType, Number.parseInt(minute), details);
+
+  setEventType("goal");
+  setMinute("");
+  setPlayerName("");
+  setPlayerOut("");
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 text-sm">
@@ -45,10 +53,10 @@ export default function EventForm({ match, onSubmit, onCancel }: EventFormProps)
         >
           <option value="goal">Goal</option>
           <option value="substitution">Substitution</option>
-          <option value="yellow_card">Yellow Card</option>
-          <option value="red_card">Red Card</option>
-          <option value="halftime">Half-time</option>
-          <option value="fulltime">Full-time</option>
+          <option value="yellow-card">Yellow Card</option>
+          <option value="red-card">Red Card</option>
+          <option value="half-time">Half-time</option>
+          <option value="match-end">Full-time</option>
         </select>
       </div>
 
@@ -74,8 +82,8 @@ export default function EventForm({ match, onSubmit, onCancel }: EventFormProps)
               onChange={(e) => setTeam(e.target.value)}
               className="w-full px-3 py-2 bg-background border border-border rounded text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value={match.teamA}>{match.teamA}</option>
-              <option value={match.teamB}>{match.teamB}</option>
+              <option value="teamA">{match.teamA}</option>
+              <option value="teamB">{match.teamB}</option>
             </select>
           </div>
 
