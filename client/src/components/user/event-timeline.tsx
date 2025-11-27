@@ -13,10 +13,10 @@ export default function EventTimeline({ match }: EventTimelineProps) {
     const icons = {
       goal: "⚽",
       substitution: "🔄",
-      " yellow-card": "🟨",
-      " red-card": "🟥",
-      " half-time": "⏸️",
-      " full-time": "🏁",
+      "yellow-card": "🟨",
+      "red-card": "🟥",
+      "half-time": "⏸️",
+      "full-time": "🏁",
     };
     return icons[type as keyof typeof icons];
   };
@@ -25,7 +25,7 @@ export default function EventTimeline({ match }: EventTimelineProps) {
     const labels = {
       goal: "Goal",
       substitution: "Substitution",
-      " yellow-card": "Yellow Card",
+      "yellow-card": "Yellow Card",
       "red-card": "Red Card",
       "half-time": "Half-time",
       "full-time": "Full-time",
@@ -61,6 +61,7 @@ export default function EventTimeline({ match }: EventTimelineProps) {
     es.onmessage = (event) => {
       try {
         const parsed: MatchEvent = JSON.parse(event.data);
+        console.log(`event: ${parsed}`)
         setEvents((prev) => [...prev, parsed]);
       } catch (err) {
         console.error("Invalid SSE event:", err);
@@ -94,7 +95,7 @@ export default function EventTimeline({ match }: EventTimelineProps) {
             }`}
           >
             <div
-              className={`max-w-[70%] rounded-xl px-4 py-3 shadow 
+              className={`max-w-[70%] rounded-xl px-20 py-1 shadow 
               ${
                 isTeamA ? "bg-secondary text-left" : "bg-primary/20 text-right"
               }`}
